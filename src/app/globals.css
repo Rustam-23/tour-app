@@ -24,3 +24,189 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+/* Оптимизации для улучшения INP */
+@layer utilities {
+  .will-change-transform {
+    will-change: transform;
+  }
+
+  .will-change-auto {
+    will-change: auto;
+  }
+
+  .gpu-accelerated {
+    transform: translateZ(0);
+    backface-visibility: hidden;
+    perspective: 1000px;
+  }
+}
+
+@layer components {
+  /* Компонентные стили для навигации */
+  .nav-link {
+    @apply transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 rounded px-2 py-1;
+  }
+
+  .nav-link-active {
+    @apply text-yellow-300 font-semibold;
+  }
+
+  .nav-link-inactive {
+    @apply hover:text-blue-200;
+  }
+
+  .mobile-menu {
+    @apply md:hidden mt-2 space-y-2 transition-all duration-300 ease-in-out transform origin-top;
+  }
+
+  .mobile-menu-open {
+    @apply max-h-48 opacity-100 scale-y-100;
+  }
+
+  .mobile-menu-closed {
+    @apply max-h-0 opacity-0 scale-y-95 overflow-hidden;
+  }
+
+  /* Оптимизированные стили для форм */
+  .form-input {
+    @apply w-full p-2 border rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors duration-200;
+  }
+
+  .form-button {
+    @apply w-full p-2 rounded transition-colors duration-200 focus:ring-2 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  .form-button-primary {
+    @apply bg-gray-300 hover:bg-gray-400 focus:ring-gray-500;
+  }
+
+  .social-button {
+    @apply flex-1 text-center p-2 rounded transition-colors duration-200 focus:ring-2 focus:outline-none;
+  }
+
+  .social-button-telegram {
+    @apply bg-blue-500 text-white hover:bg-blue-600 focus:ring-blue-500;
+  }
+
+  .social-button-whatsapp {
+    @apply bg-green-500 text-white hover:bg-green-600 focus:ring-green-500;
+  }
+
+  .social-button-disabled {
+    @apply bg-gray-300 text-gray-500 cursor-not-allowed;
+  }
+}
+
+/* Оптимизация для touch устройств */
+@media (hover: none) and (pointer: coarse) {
+  .hover\:scale-110:hover {
+    transform: none;
+  }
+
+  .hover\:text-blue-200:hover {
+    color: inherit;
+  }
+
+  .hover\:bg-blue-600:hover {
+    background-color: inherit;
+  }
+
+  .hover\:bg-green-600:hover {
+    background-color: inherit;
+  }
+
+  .hover\:bg-gray-400:hover {
+    background-color: inherit;
+  }
+
+  /* Увеличиваем область касания для мобильных устройств */
+  button, a[role="button"], input[type="submit"] {
+    min-height: 44px;
+    min-width: 44px;
+  }
+}
+
+/* Улучшение производительности для всех интерактивных элементов */
+button, a, input, [role="button"], [tabindex] {
+  touch-action: manipulation;
+}
+
+/* Оптимизация скроллинга */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Предотвращение layout shift */
+img {
+  height: auto;
+  max-width: 100%;
+}
+
+/* Оптимизация для анимаций - уважение к предпочтениям пользователя */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Улучшение производительности рендеринга */
+* {
+  box-sizing: border-box;
+}
+
+/* Оптимизация для элементов с анимациями */
+.transition-transform,
+.transition-colors,
+.transition-all {
+  will-change: transform, opacity, color;
+}
+
+/* Сброс will-change после завершения анимации */
+.transition-transform:not(:hover):not(:focus),
+.transition-colors:not(:hover):not(:focus),
+.transition-all:not(:hover):not(:focus) {
+  will-change: auto;
+}
+
+/* Оптимизация для изображений */
+img[loading="lazy"] {
+  content-visibility: auto;
+}
+
+/* Улучшение контрастности для доступности */
+.focus\:ring-2:focus {
+  outline: 2px solid transparent;
+  outline-offset: 2px;
+}
+
+/* Оптимизация для больших списков */
+.tour-grid {
+  contain: layout style paint;
+}
+
+/* Предотвращение нежелательных эффектов при быстром взаимодействии */
+button:active,
+a:active {
+  transform: translateY(1px);
+  transition: transform 0.1s ease;
+}
+
+/* Оптимизация для форм */
+input:focus,
+textarea:focus,
+select:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.5);
+}
+
+/* Улучшение видимости фокуса для клавиатурной навигации */
+.focus-visible:focus-visible {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+}

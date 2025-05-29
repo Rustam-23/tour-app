@@ -1,103 +1,203 @@
-import Image from "next/image";
+'use client';
+import Link from 'next/link';
+import Image from 'next/image';
+import { useForm, SubmitHandler } from 'react-hook-form';
+import React, { useCallback, useMemo, startTransition } from "react";
+
+interface Tour {
+    id: number;
+    title: string;
+    description: string;
+    image: string;
+    duration: string;
+    price: number;
+}
+
+interface FormInputs {
+    name: string;
+    phone: string;
+}
+
+const tours: Tour[] = [
+    {
+        id: 1,
+        title: 'Обзорная экскурсия',
+        description: 'Explore the ancient landmarks and hidden gems of the city.',
+        image: '/images/1.jpeg',
+        duration: '2 часа',
+        price: 3000,
+    },
+    {
+        id: 2,
+        title: 'Ночная экскурсия',
+        description: 'Enjoy a scenic boat tour along the citys river at dusk.',
+        image: '/images/3.jpeg',
+        duration: '1.5 часа',
+        price: 4500,
+    },
+    {
+        id: 3,
+        title: 'Экскурсия по Кремлю',
+        description: 'Taste local delicacies while learning about the citys culture.',
+        image: '/images/2.jpeg',
+        duration: '3 часа',
+        price: 5000,
+    },
+];
+
+const TourCard: React.FC<{ tour: Tour }> = React.memo(({ tour }) => {
+    const { register, handleSubmit, watch, formState: { errors, isValid } } = useForm<FormInputs>({
+        mode: 'onChange',
+        defaultValues: {
+            name: '',
+            phone: ''
+        }
+    });
+
+    const formData = watch();
+
+    const onSubmit: SubmitHandler<FormInputs> = useCallback((data) => {
+        startTransition(() => {
+            console.log('Form submitted:', data);
+        });
+    }, []);
+
+    const { telegramMessage, whatsappMessage } = useMemo(() => {
+        const message = `Заявка на экскурсию: ${tour.title}\nИмя: ${formData.name || ''}\nТелефон: ${formData.phone || ''}`;
+        return {
+            telegramMessage: encodeURIComponent(message),
+            whatsappMessage: encodeURIComponent(message)
+        };
+    }, [tour.title, formData.name, formData.phone]);
+
+    const isFormValid = isValid && formData.name && formData.phone;
+
+    const handleLinkClick = useCallback((e: React.MouseEvent) => {
+        if (!isFormValid) {
+            e.preventDefault();
+            return false;
+        }
+    }, [isFormValid]);
+
+    return (
+        <article className="border rounded-lg shadow-lg p-4 max-w-sm mx-auto gpu-accelerated">
+            <div className="relative w-full h-48">
+                <Image
+                    src={tour.image}
+                    alt={tour.title}
+                    fill
+                    className="rounded-md object-cover"
+                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                    priority={tour.id === 1}
+                    loading={tour.id === 1 ? "eager" : "lazy"}
+                />
+            </div>
+            <h2 className="text-xl font-bold mt-4">{tour.title}</h2>
+            <p className="text-gray-600 mt-2">{tour.description}</p>
+            <p className="mt-2"><strong>Длительность:</strong> {tour.duration}</p>
+            <p className="mt-1"><strong>Цена:</strong> ${tour.price}</p>
+
+            <form onSubmit={handleSubmit(onSubmit)} className="mt-4" noValidate>
+                <div className="mb-2">
+                    <input
+                        type="text"
+                        placeholder="Ваше имя"
+                        autoComplete="name"
+                        {...register('name', {
+                            required: 'Имя обязательно',
+                            minLength: { value: 2, message: 'Имя должно быть не короче 2 символов' }
+                        })}
+                        className="form-input"
+                        aria-invalid={errors.name ? 'true' : 'false'}
+                    />
+                    {errors.name && (
+                        <p className="text-red-500 text-sm mt-1" role="alert">
+                            {errors.name.message}
+                        </p>
+                    )}
+                </div>
+
+                <div className="mb-4">
+                    <input
+                        type="tel"
+                        placeholder="Ваш телефон"
+                        autoComplete="tel"
+                        {...register('phone', {
+                            required: 'Телефон обязателен',
+                            pattern: { value: /^\+?\d{10,15}$/, message: 'Неверный формат номера' }
+                        })}
+                        className="form-input"
+                        aria-invalid={errors.phone ? 'true' : 'false'}
+                    />
+                    {errors.phone && (
+                        <p className="text-red-500 text-sm mt-1" role="alert">
+                            {errors.phone.message}
+                        </p>
+                    )}
+                </div>
+
+                <button
+                    type="submit"
+                    className="form-button form-button-primary mb-2"
+                    disabled={!isFormValid}
+                    aria-label={`Подтвердить заявку на ${tour.title}`}
+                >
+                    Подтвердить
+                </button>
+
+                <div className="flex space-x-2">
+                    <Link
+                        href={isFormValid ? `https://t.me/share/url?url=${telegramMessage}` : '#'}
+                        className={`social-button ${isFormValid ? 'social-button-telegram' : 'social-button-disabled'}`}
+                        target={isFormValid ? "_blank" : undefined}
+                        rel={isFormValid ? "noopener noreferrer" : undefined}
+                        onClick={handleLinkClick}
+                        aria-label={`Отправить заявку через Telegram для ${tour.title}`}
+                        tabIndex={isFormValid ? 0 : -1}
+                    >
+                        Telegram
+                    </Link>
+                    <Link
+                        href={isFormValid ? `https://wa.me/?text=${whatsappMessage}` : '#'}
+                        className={`social-button ${isFormValid ? 'social-button-whatsapp' : 'social-button-disabled'}`}
+                        target={isFormValid ? "_blank" : undefined}
+                        rel={isFormValid ? "noopener noreferrer" : undefined}
+                        onClick={handleLinkClick}
+                        aria-label={`Отправить заявку через WhatsApp для ${tour.title}`}
+                        tabIndex={isFormValid ? 0 : -1}
+                    >
+                        WhatsApp
+                    </Link>
+                </div>
+            </form>
+        </article>
+    );
+});
+
+TourCard.displayName = 'TourCard';
 
 export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm/6 text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+    return (
+        <div className="min-h-screen bg-gray-100">
+            <header className="bg-blue-600 text-white py-6">
+                <h1 className="text-3xl font-bold text-center">Экскурсии по городу</h1>
+                <p className="text-center mt-2">Откройте город с нашими увлекательными турами!</p>
+            </header>
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+            <main className="py-8">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <div className="tour-grid grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {tours.map((tour) => (
+                            <TourCard key={tour.id} tour={tour} />
+                        ))}
+                    </div>
+                </div>
+            </main>
+
+            <footer className="bg-gray-800 text-white py-4 text-center">
+
+            <p>© 2025 Экскурсии по городу. Все права защищены.</p>
+            </footer>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
-  );
+    );
 }
