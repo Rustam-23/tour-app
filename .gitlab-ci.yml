@@ -1,0 +1,54 @@
+stages:
+  - build
+  - deploy
+
+variables:
+  IMAGE_NAME: tour-app
+  CONTAINER_NAME: tour-app
+
+# Сборка Docker образа
+build:
+  stage: build
+  image: docker:latest
+  services:
+    - docker:dind
+  variables:
+    DOCKER_DRIVER: overlay2
+    DOCKER_TLS_CERTDIR: "/certs"
+  script:
+    - echo "Building Docker image..."
+    - docker build -t $IMAGE_NAME:$CI_COMMIT_SHORT_SHA .
+    - docker tag $IMAGE_NAME:$CI_COMMIT_SHORT_SHA $IMAGE_NAME:latest
+    # Логин в GitLab Container Registry
+    - echo $CI_REGISTRY_PASSWORD | docker login -u $CI_REGISTRY_USER --password-stdin $CI_REGISTRY
+    # Сохраняем образ в registry
+    - docker tag $IMAGE_NAME:latest $CI_REGISTRY_IMAGE:latest
+    - docker tag $IMAGE_NAME:latest $CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA
+    - docker push $CI_REGISTRY_IMAGE:latest
+    - docker push $CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA
+    - echo "Image pushed to $CI_REGISTRY_IMAGE:latest"
+  only:
+    - main
+
+# Деплой на VM
+deploy:
+  stage: deploy
+  tags:
+    - deploy  # Runner на вашей VM должен иметь этот тег
+  script:
+    - echo "Deploying to production server..."
+    # Логин в GitLab Registry
+    - echo $CI_REGISTRY_PASSWORD | docker login -u $CI_REGISTRY_USER --password-stdin $CI_REGISTRY
+    # Останавливаем старый контейнер
+    - docker stop $CONTAINER_NAME || true
+    - docker rm $CONTAINER_NAME || true
+    # Удаляем старый образ
+    - docker rmi $CI_REGISTRY_IMAGE:latest || true
+    # Скачиваем новый образ
+    - docker pull $CI_REGISTRY_IMAGE:latest
+    # Запускаем новый контейнер
+    - docker run -d --name $CONTAINER_NAME -p 80:80 --restart unless-stopped $CI_REGISTRY_IMAGE:latest
+    - echo "Deployment completed! App available at http://your-server-ip"
+  only:
+    - main
+  when: manual  # Деплой запускается вручную (можно убрать для авто-деплоя)
