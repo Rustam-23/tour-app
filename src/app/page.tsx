@@ -1,7 +1,12 @@
 import Image from 'next/image';
 import { Metadata } from 'next';
+import Link from 'next/link';
 import TourBookingForm from './components/TourBookingForm';
+import { getAllTours, type Tour } from './lib/tours';
+import Header from "@/app/components/Header";
 
+
+// Генерация метаданных
 export const metadata: Metadata = {
     title: 'Экскурсии по городу - Лучшие туры и экскурсии',
     description: 'Откройте город с нашими увлекательными турами! Обзорные, ночные экскурсии и туры по Кремлю. Бронируйте сейчас!',
@@ -43,52 +48,8 @@ export const metadata: Metadata = {
     },
 };
 
-interface Tour {
-    id: number;
-    title: string;
-    description: string;
-    image: string;
-    duration: string;
-    price: number;
-    slug: string;
-    category: string;
-}
-
-const tours: Tour[] = [
-    {
-        id: 1,
-        title: 'Обзорная экскурсия',
-        description: 'Откройте для себя древние достопримечательности и скрытые жемчужины города в нашей увлекательной обзорной экскурсии.',
-        image: '/images/1.jpeg',
-        duration: '2 часа',
-        price: 3000,
-        slug: 'obzornaya-ekskursiya',
-        category: 'Обзорные',
-    },
-    {
-        id: 2,
-        title: 'Ночная экскурсия',
-        description: 'Насладитесь живописной ночной прогулкой по городу и откройте его красоту в вечернем освещении.',
-        image: '/images/3.jpeg',
-        duration: '1.5 часа',
-        price: 4500,
-        slug: 'nochnaya-ekskursiya',
-        category: 'Ночные',
-    },
-    {
-        id: 3,
-        title: 'Экскурсия по Кремлю',
-        description: 'Погрузитесь в историю России, исследуя величественный Кремль с опытным гидом.',
-        image: '/images/2.jpeg',
-        duration: '3 часа',
-        price: 5000,
-        slug: 'ekskursiya-po-kremlyu',
-        category: 'Исторические',
-    },
-];
-
 // Структурированные данные для SEO
-const generateStructuredData = () => {
+function generateStructuredData(tours: Tour[]) {
     const structuredData = {
         '@context': 'https://schema.org',
         '@type': 'TouristAttraction',
@@ -115,13 +76,13 @@ const generateStructuredData = () => {
     };
 
     return JSON.stringify(structuredData);
-};
+}
 
-// Server Component для карточки тура
+// Server Component для карточки тура на главной странице
 function TourCard({ tour }: { tour: Tour }) {
     return (
         <article
-            className="border rounded-lg shadow-lg p-4 max-w-sm mx-auto"
+            className="border rounded-lg shadow-lg p-4 max-w-sm mx-auto hover:shadow-xl transition-shadow"
             itemScope
             itemType="https://schema.org/TouristAttraction"
         >
@@ -144,18 +105,18 @@ function TourCard({ tour }: { tour: Tour }) {
                 </h2>
             </header>
 
-            <p className="text-gray-600 mt-2" itemProp="description">
+            <p className="text-black mt-2" itemProp="description">
                 {tour.description}
             </p>
 
-            <div className="mt-2">
+            <div className="mt-2 text-black">
                 <p><strong>Длительность:</strong> <time itemProp="duration">{tour.duration}</time></p>
                 <p className="mt-1">
                     <strong>Цена:</strong>
                     <span itemProp="offers" itemScope itemType="https://schema.org/Offer">
-            <span itemProp="price">{tour.price}</span>
-            <span itemProp="priceCurrency" content="RUB"> ₽</span>
-          </span>
+                        <span itemProp="price">{tour.price}</span>
+                        <span itemProp="priceCurrency" content="RUB"> ₽</span>
+                    </span>
                 </p>
                 <p className="mt-1">
                     <strong>Категория:</strong>
@@ -163,38 +124,43 @@ function TourCard({ tour }: { tour: Tour }) {
                 </p>
             </div>
 
-            {/* Client Component для формы */}
+            {/* Кнопка "Подробнее" */}
+            <div className="mt-4 mb-4">
+                <Link
+                    href={`/tours/${tour.slug}`}
+                    className="inline-block w-full text-center bg-cyan-600 text-white px-4 py-2 rounded-md hover:bg-cyan-600 transition-colors"
+                >
+                    Подробнее
+                </Link>
+            </div>
+
+            {/* Client Component для формы бронирования */}
             <TourBookingForm tour={tour} />
         </article>
     );
 }
 
-export default function Home() {
+// Главная страница - статически генерируется
+export default async function Home() {
+    // Получаем данные на этапе сборки
+    const tours = getAllTours();
+
     return (
         <>
             {/* Структурированные данные */}
             <script
                 type="application/ld+json"
-                dangerouslySetInnerHTML={{ __html: generateStructuredData() }}
+                dangerouslySetInnerHTML={{ __html: generateStructuredData(tours) }}
             />
 
-            <div className="min-h-screen bg-gray-100">
-                <header className="bg-blue-600 text-white py-6">
-                    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                        <h1 className="text-3xl font-bold text-center">
-                            Экскурсии по городу
-                        </h1>
-                        <p className="text-center mt-2 text-lg">
-                            Откройте город с нашими увлекательными турами!
-                        </p>
-                    </div>
-                </header>
+            <div className="bg-gray-100">
+                <Header />
 
                 <main className="py-8">
                     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                        <section aria-labelledby="tours-heading">
-                            <h2 id="tours-heading" className="sr-only">
-                                Доступные экскурсии
+                        <section aria-labelledby="tours-heading" className="scroll-mt-28">
+                            <h2 id="tours-heading" className="text-3xl font-bold text-center mb-8 text-black">
+                                Наши экскурсии
                             </h2>
 
                             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -205,19 +171,6 @@ export default function Home() {
                         </section>
                     </div>
                 </main>
-
-                <footer className="bg-gray-800 text-white py-4 text-center">
-                    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                        <p>© 2025 Экскурсии по городу. Все права защищены.</p>
-                        <nav className="mt-2" aria-label="Footer navigation">
-                            <ul className="flex justify-center space-x-4 text-sm">
-                                <li><a href="/privacy" className="hover:underline">Политика конфиденциальности</a></li>
-                                <li><a href="/terms" className="hover:underline">Условия использования</a></li>
-                                <li><a href="/contact" className="hover:underline">Контакты</a></li>
-                            </ul>
-                        </nav>
-                    </div>
-                </footer>
             </div>
         </>
     );

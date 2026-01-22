@@ -20,7 +20,7 @@ interface FormInputs {
 }
 
 const TourBookingForm: React.FC<{ tour: Tour }> = React.memo(({ tour }) => {
-    const { register, handleSubmit, watch, formState: { errors, isValid } } = useForm<FormInputs>({
+    const { register, watch, formState: { errors, isValid } } = useForm<FormInputs>({
         mode: 'onChange',
         defaultValues: {
             name: '',
@@ -55,7 +55,7 @@ const TourBookingForm: React.FC<{ tour: Tour }> = React.memo(({ tour }) => {
 
             <div className="space-y-2">
                 <div className="mb-2">
-                    <label htmlFor={`name-${tour.id}`} className="sr-only">
+                    <label htmlFor={`name-${tour.id}`} className="sr-only text-gray-800">
                         Ваше имя
                     </label>
                     <input
@@ -72,14 +72,14 @@ const TourBookingForm: React.FC<{ tour: Tour }> = React.memo(({ tour }) => {
                         aria-describedby={errors.name ? `name-error-${tour.id}` : undefined}
                     />
                     {errors.name && (
-                        <p id={`name-error-${tour.id}`} className="text-red-500 text-sm mt-1" role="alert">
+                        <p id={`name-error-${tour.id}`} className="text-red-700 text-sm mt-1" role="alert">
                             {errors.name.message}
                         </p>
                     )}
                 </div>
 
                 <div className="mb-4">
-                    <label htmlFor={`phone-${tour.id}`} className="sr-only">
+                    <label htmlFor={`phone-${tour.id}`} className="sr-only text-gray-800">
                         Ваш телефон
                     </label>
                     <input
@@ -96,7 +96,7 @@ const TourBookingForm: React.FC<{ tour: Tour }> = React.memo(({ tour }) => {
                         aria-describedby={errors.phone ? `phone-error-${tour.id}` : undefined}
                     />
                     {errors.phone && (
-                        <p id={`phone-error-${tour.id}`} className="text-red-500 text-sm mt-1" role="alert">
+                        <p id={`phone-error-${tour.id}`} className="text-red-700 text-sm mt-1" role="alert">
                             {errors.phone.message}
                         </p>
                     )}
@@ -108,7 +108,7 @@ const TourBookingForm: React.FC<{ tour: Tour }> = React.memo(({ tour }) => {
                         className={`flex-1 text-center py-2 px-4 rounded-md transition-colors ${
                             isFormValid
                                 ? 'bg-blue-500 text-white hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2'
-                                : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                                : 'bg-gray-300 text-gray-700 cursor-not-allowed'
                         }`}
                         target={isFormValid ? "_blank" : undefined}
                         rel={isFormValid ? "noopener noreferrer" : undefined}
@@ -123,7 +123,7 @@ const TourBookingForm: React.FC<{ tour: Tour }> = React.memo(({ tour }) => {
                         className={`flex-1 text-center py-2 px-4 rounded-md transition-colors ${
                             isFormValid
                                 ? 'bg-green-500 text-white hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2'
-                                : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                                : 'bg-gray-300 text-gray-700 cursor-not-allowed'
                         }`}
                         target={isFormValid ? "_blank" : undefined}
                         rel={isFormValid ? "noopener noreferrer" : undefined}

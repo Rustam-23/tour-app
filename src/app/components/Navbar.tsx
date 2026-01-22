@@ -6,6 +6,7 @@ import { usePathname } from 'next/navigation';
 const menuItems = [
     { href: '/', label: 'Экскурсии' },
     { href: '/reviews', label: 'Отзывы' },
+    { href: '/gallery', label: 'Галерея' },
     { href: '/about', label: 'Обо мне' },
     { href: '/contacts', label: 'Контакты' },
 ];
@@ -15,9 +16,8 @@ export default function Navbar() {
     const pathname = usePathname();
     const menuRef = useRef<HTMLDivElement>(null);
     const buttonRef = useRef<HTMLButtonElement>(null);
-    const timeoutRef = useRef<NodeJS.Timeout>();
+    const timeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
 
-    // Debounced toggle для предотвращения множественных кликов
     const toggleMenu = useCallback(() => {
         if (timeoutRef.current) {
             clearTimeout(timeoutRef.current);
@@ -25,7 +25,7 @@ export default function Navbar() {
 
         timeoutRef.current = setTimeout(() => {
             setIsMenuOpen((prev) => !prev);
-        }, 50); // Небольшая задержка для debouncing
+        }, 50);
     }, []);
 
     const closeMenu = useCallback(() => {
@@ -35,7 +35,6 @@ export default function Navbar() {
         setIsMenuOpen(false);
     }, []);
 
-    // Очистка timeout при размонтировании
     useEffect(() => {
         return () => {
             if (timeoutRef.current) {
@@ -44,15 +43,14 @@ export default function Navbar() {
         };
     }, []);
 
-    // Пассивные слушатели событий для лучшей производительности
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
             if (
-                isMenuOpen &&
-                menuRef.current &&
-                buttonRef.current &&
-                !menuRef.current.contains(event.target as Node) &&
-                !buttonRef.current.contains(event.target as Node)
+              isMenuOpen &&
+              menuRef.current &&
+              buttonRef.current &&
+              !menuRef.current.contains(event.target as Node) &&
+              !buttonRef.current.contains(event.target as Node)
             ) {
                 closeMenu();
             }
@@ -65,7 +63,6 @@ export default function Navbar() {
             }
         };
 
-        // Используем пассивные слушатели
         document.addEventListener('mousedown', handleClickOutside, { passive: true });
         document.addEventListener('keydown', handleEscape, { passive: true });
 
@@ -75,7 +72,6 @@ export default function Navbar() {
         };
     }, [isMenuOpen, closeMenu]);
 
-    // Закрытие меню при изменении маршрута
     useEffect(() => {
         closeMenu();
     }, [pathname, closeMenu]);
@@ -89,94 +85,112 @@ export default function Navbar() {
         const isActive = pathname === href;
 
         return (
-            <Link
-                href={href}
-                className={`nav-link ${isActive ? 'nav-link-active' : 'nav-link-inactive'} ${className}`}
-                onClick={onClick}
-                aria-current={isActive ? 'page' : undefined}
-                prefetch={false} // Отключаем prefetch для улучшения производительности
-            >
-                {children}
-            </Link>
-        );
+                    <Link
+                      href={href}
+                      className={`nav-link relative px-3 py-2 rounded-md text-gray-900 font-medium 
+                              ${isActive && href !== '/' ? 'border-2 border-white' : ''}
+                              transition-all duration-300 ease-in-out 
+                              transform hover:scale-105 active:scale-95
+                              focus:outline-none focus:ring-0 ${className}`}
+                      onClick={onClick}
+                      aria-current={isActive ? 'page' : undefined}
+                      prefetch={false}
+                    >
+                        {children}
+                        
+                    </Link>        );
     }, [pathname]);
 
     return (
-        <nav
-            className="bg-blue-600 text-white p-4 relative"
-            role="navigation"
-            aria-label="Главная навигация"
-            style={{ contain: 'layout style paint' }} // CSS containment
-        >
-            <div className="max-w-7xl mx-auto flex justify-between items-center">
-                <div className="text-xl font-bold">
-                    <NavLink href="/">Экскурсии</NavLink>
-                </div>
+      <nav
+        className="sticky top-0 z-50 bg-cyan-600 text-gray-900 p-4 shadow-lg"
+        role="navigation"
+        aria-label="Главная навигация"
+        style={{ contain: 'layout style paint' }}
+      >
+          <div className="max-w-7xl mx-auto flex justify-between items-center">
+              <div className="flex items-center space-x-4">
+                  <div className="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 rounded-lg flex items-center justify-center overflow-hidden">
+                      <img
+                        src="/images/logo.png"
+                        alt="Klio Travel Logo"
+                        className="w-full h-full object-contain"
+                      />
+                  </div>
+                  {/*<NavLink href="/" className="text-xl font-bold">*/}
+                  <span className="text-3xl font-extrabold">
+                      Klio Travel
+                      
+                  </span>
+                  {/*</NavLink>*/}
+              </div>
 
-                {/* Desktop Menu */}
-                <div className="hidden md:flex space-x-4" role="menubar">
-                    {menuItems.map((item) => (
-                        <NavLink key={item.href} href={item.href}>
-                            {item.label}
-                        </NavLink>
-                    ))}
-                </div>
+              <div className="hidden md:flex space-x-4" role="menubar">
+                  {menuItems.map((item) => (
+                    <NavLink key={item.href} href={item.href}>
+                        {item.label}
+                    </NavLink>
+                  ))}
+              </div>
 
-                {/* Mobile Menu Button */}
-                <button
-                    ref={buttonRef}
-                    className="md:hidden text-white focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-blue-600 rounded p-2 touch-manipulation"
-                    onClick={toggleMenu}
-                    aria-label={isMenuOpen ? 'Закрыть меню' : 'Открыть меню'}
-                    aria-expanded={isMenuOpen}
-                    aria-controls="mobile-menu"
-                    aria-haspopup="true"
-                    style={{
-                        minHeight: '44px',
-                        minWidth: '44px',
-                        WebkitTapHighlightColor: 'transparent'
-                    }}
-                >
-                    <svg
-                        className="w-6 h-6"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                        aria-hidden="true"
-                        style={{ pointerEvents: 'none' }}
-                    >
-                        <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d={isMenuOpen ? 'M6 18L18 6M6 6l12 12' : 'M4 6h16M4 12h16M4 18h16'}
-                        />
-                    </svg>
-                </button>
+              <button
+                ref={buttonRef}
+                className="md:hidden text-gray-900 p-2 rounded-md hover:bg-cyan-700 
+                        transition-all duration-300 ease-in-out transform hover:scale-110 
+                        active:scale-95 focus:outline-none focus:ring-0"
+                onClick={toggleMenu}
+                aria-label={isMenuOpen ? 'Закрыть меню' : 'Открыть меню'}
+                aria-expanded={isMenuOpen}
+                aria-controls="mobile-menu"
+                aria-haspopup="true"
+                style={{
+                    minHeight: '44px',
+                    minWidth: '44px',
+                    WebkitTapHighlightColor: 'transparent',
+                    outline: 'none'
+                }}
+              >
+                  <svg
+                    className="w-6 h-6"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                    aria-hidden="true"
+                    style={{ pointerEvents: 'none' }}
+                  >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d={isMenuOpen ? 'M6 18L18 6M6 6l12 12' : 'M4 6h16M4 12h16M4 18h16'}
+                      />
+                  </svg>
+              </button>
+          </div>
+
+          {isMenuOpen && (
+            <div
+              ref={menuRef}
+              id="mobile-menu"
+              className="md:hidden mt-2 space-y-2 animate-fade-in bg-cyan-600 rounded-md shadow-md"
+              role="menu"
+              aria-labelledby="mobile-menu-button"
+              style={{ contain: 'layout style paint' }}
+            >
+                {menuItems.map((item) => (
+                  <NavLink
+                    key={item.href}
+                    href={item.href}
+                    className="block py-3 px-4 hover:bg-cyan-700 rounded-md 
+                                transition-all duration-300 ease-in-out transform hover:scale-105
+                                focus:outline-none focus:ring-0"
+                    onClick={closeMenu}
+                  >
+                      {item.label}
+                  </NavLink>
+                ))}
             </div>
-
-            {/* Mobile Menu */}
-            {isMenuOpen && (
-                <div
-                    ref={menuRef}
-                    id="mobile-menu"
-                    className="md:hidden mt-2 space-y-2 animate-fade-in"
-                    role="menu"
-                    aria-labelledby="mobile-menu-button"
-                    style={{ contain: 'layout style paint' }}
-                >
-                    {menuItems.map((item) => (
-                        <NavLink
-                            key={item.href}
-                            href={item.href}
-                            className="block py-3 px-2"
-                            onClick={closeMenu}
-                        >
-                            {item.label}
-                        </NavLink>
-                    ))}
-                </div>
-            )}
-        </nav>
+          )}
+      </nav>
     );
 }

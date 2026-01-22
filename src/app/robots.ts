@@ -1,5 +1,8 @@
 import { MetadataRoute } from 'next'
 
+export const dynamic = 'force-static';
+export const revalidate = false;
+
 export default function robots(): MetadataRoute.Robots {
     return {
         rules: {
@@ -7,6 +10,6 @@ export default function robots(): MetadataRoute.Robots {
             allow: '/',
             disallow: '/api/',
         },
-        sitemap: 'https://your-domain.com/sitemap.xml',
+        sitemap: 'https://klio-travel.ru/sitemap.xml',
     }
 }

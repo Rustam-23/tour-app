@@ -78,7 +78,7 @@ body {
   }
 
   .form-button-primary {
-    @apply bg-gray-300 hover:bg-gray-400 focus:ring-gray-500;
+    @apply bg-blue-500 text-white hover:bg-blue-600 focus:ring-blue-500;
   }
 
   .social-button {
@@ -209,4 +209,16 @@ select:focus {
 .focus-visible:focus-visible {
   outline: 2px solid #3b82f6;
   outline-offset: 2px;
+}
+
+
+
+/* Оптимизация для производительности */
+.will-change-transform {
+  will-change: transform;
+}
+
+/* Плавная прокрутка */
+html {
+  scroll-behavior: smooth;
 }
